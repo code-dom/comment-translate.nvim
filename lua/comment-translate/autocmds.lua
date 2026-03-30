@@ -74,6 +74,9 @@ function M.setup_hover(config, parser, translate, ui)
     group = hover_group,
     callback = function()
       local bufnr = vim.api.nvim_get_current_buf()
+      if bufnr == ui.hover.bufnr() then
+        return
+      end
       cleanup_timer(bufnr)
 
       vim.defer_fn(function()
@@ -85,31 +88,21 @@ function M.setup_hover(config, parser, translate, ui)
     end,
   })
 
-  vim.api.nvim_create_autocmd({ 'BufLeave', 'WinLeave' }, {
+  vim.api.nvim_create_autocmd('WinEnter', {
     group = hover_group,
-    callback = function(args)
-      cleanup_timer(args.buf)
-      if ui.hover.bufnr() ~= args.buf then
+    callback = function()
+      local bufnr = vim.api.nvim_get_current_buf()
+      if bufnr ~= ui.hover.bufnr() then
+        cleanup_timer(bufnr)
         ui.hover.close()
       end
     end,
   })
-
   vim.api.nvim_create_autocmd('BufDelete', {
     group = hover_group,
     callback = function()
       local bufnr = vim.api.nvim_get_current_buf()
       cleanup_timer(bufnr)
-    end,
-  })
-
-  vim.api.nvim_create_autocmd('BufWipeout', {
-    group = hover_group,
-    callback = function(args)
-      cleanup_timer(args.buf)
-      if ui.hover.bufnr() ~= args.buf then
-        ui.hover.close()
-      end
     end,
   })
 
